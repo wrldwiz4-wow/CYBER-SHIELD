@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CYBER SHIELD | URL Threat Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<div class="app-shell">
+<aside class="sidebar">
+  <div class="brand"><div class="brand-icon">盾</div><div><b>CYBER <span>SHIELD</span></b><small>URL THREAT INTELLIGENCE</small></div></div>
+  <div class="side-label">WORKSPACE</div>
+  <button class="nav active" data-view="overview">▦ <span>Dashboard</span></button>
+  <button class="nav" data-view="scanner">⌕ <span>URL Scanner</span></button>
+  <button class="nav" data-view="bulk">▤ <span>Bulk Scanner</span><em>NEW</em></button>
+  <button class="nav" data-view="qr">▧ <span>QR Code Scanner</span></button>
+  <button class="nav" data-view="history">◷ <span>Scan History</span></button>
+  <div class="side-label tools-label">INTELLIGENCE</div>
+  <button class="nav" data-view="features">◈ <span>Threat Analysis</span></button>
+  <button class="nav" data-view="reports">⇩ <span>Reports & Export</span></button>
+  <div class="sidebar-bottom"><div class="online-dot"></div><span>Protection engine ready</span><small>v1.0.0 · Student edition</small></div>
+</aside>
+<main class="main">
+<header class="topbar"><div class="mobile-brand">CYBER <span>SHIELD</span></div><div class="crumb">Security Center <b>/</b> <span id="crumb">Dashboard</span></div><div class="top-actions"><span class="live"><i></i> SYSTEM ONLINE</span><button class="icon-btn" title="Notifications">♧</button><div class="avatar">CS</div></div></header>
+<section class="content">
+<div class="view active" id="overview">
+  <div class="page-heading"><div><div class="eyebrow">OVERVIEW / THREAT INTELLIGENCE</div><h1>Security Dashboard</h1><p>Monitor URL risk, scan activity and threat indicators from one place.</p></div><button class="primary" onclick="showView('scanner')">＋ New URL scan</button></div>
+  <div class="status-banner"><div class="shield-large">✓</div><div><b>Threat monitoring is active</b><p>Run a scan to inspect a URL for suspicious indicators and known threat reports.</p></div><span class="banner-tag">ENGINE READY</span></div>
+  <div class="stat-grid">
+    <article class="stat-card"><div class="stat-top"><span>Total URLs scanned</span><i class="blue">↗</i></div><strong>{{ total }}</strong><small>All recorded scans</small><div class="stat-line blue-line"></div></article>
+    <article class="stat-card"><div class="stat-top"><span>Low risk</span><i class="green">✓</i></div><strong>{{ safe }}</strong><small>No major indicators found</small><div class="stat-line green-line"></div></article>
+    <article class="stat-card"><div class="stat-top"><span>Suspicious</span><i class="yellow">⚠</i></div><strong>{{ suspicious }}</strong><small>Needs manual review</small><div class="stat-line yellow-line"></div></article>
+    <article class="stat-card"><div class="stat-top"><span>Malicious indicators</span><i class="red">!</i></div><strong>{{ malicious }}</strong><small>High-risk scan results</small><div class="stat-line red-line"></div></article>
+  </div>
+  <div class="dashboard-grid">
+    <article class="panel chart-panel"><div class="panel-head"><div><h3>Scan activity</h3><p>Recent scan distribution</p></div><span class="pill">LIVE DATABASE</span></div><canvas id="activityChart" height="150"></canvas></article>
+    <article class="panel"><div class="panel-head"><div><h3>Risk classification</h3><p>Based on saved scan results</p></div></div><div class="donut-wrap"><canvas id="riskChart"></canvas><div class="donut-center"><b>{{ total }}</b><small>SCANS</small></div></div><div class="legend"><span><i class="lg-green"></i>Low risk</span><span><i class="lg-yellow"></i>Suspicious</span><span><i class="lg-red"></i>Malicious</span></div></article>
+  </div>
+  <article class="panel recent-panel"><div class="panel-head"><div><h3>Recent scans</h3><p>Your latest URL analysis activity</p></div><button class="text-btn" onclick="showView('history')">View history →</button></div>
+  <div class="table-wrap"><table><thead><tr><th>URL / DOMAIN</th><th>RISK SCORE</th><th>VERDICT</th><th>SCANNED AT</th></tr></thead><tbody>
+  {% for row in recent %}<tr><td><b>{{ row.domain }}</b><small>{{ row.url }}</small></td><td><div class="score-mini"><span style="width:{{ row.score }}%"></span></div>{{ row.score }}/100</td><td><span class="badge {{ row.verdict|lower|replace(' ','-') }}">{{ row.verdict }}</span></td><td>{{ row.scanned_at }}</td></tr>{% else %}<tr><td colspan="4" class="empty">No scans yet. Start by scanning a URL.</td></tr>{% endfor %}
+  </tbody></table></div></article>
+</div>
+<div class="view" id="scanner">
+ <div class="page-heading"><div><div class="eyebrow">ANALYSIS / SINGLE URL</div><h1>URL Security Scanner</h1><p>Inspect URL structure, domain signals, TLS and optional threat-intelligence providers.</p></div></div>
+ <article class="panel scan-box"><label for="urlInput">ENTER WEBSITE URL</label><div class="input-row"><span>⌕</span><input id="urlInput" placeholder="https://example.com/login" autocomplete="off"><button class="primary" id="scanBtn" onclick="scanUrl()">Scan URL <b>→</b></button></div><div class="helper">Only scan links you are authorized to assess. Do not open suspicious links.</div><div class="quick-examples"><span>Try:</span><button onclick="setExample('https://example.com')">example.com</button><button onclick="setExample('http://secure-login-example.xyz/verify')">suspicious sample</button></div></article>
+ <div id="scanResult" class="result-area"></div>
+</div>
+<div class="view" id="bulk">
+ <div class="page-heading"><div><div class="eyebrow">ANALYSIS / MULTIPLE URLS</div><h1>Bulk URL Scanner</h1><p>Upload a CSV or TXT file containing URLs. Maximum 100 entries per upload.</p></div></div>
+ <article class="panel upload-panel"><div class="upload-icon">⇧</div><h3>Upload URL list</h3><p>Choose a .csv or .txt file with one URL per line.</p><input type="file" id="bulkFile" accept=".csv,.txt,text/plain,text/csv"><button class="primary" onclick="bulkScan()">Scan uploaded URLs →</button><div id="bulkResults"></div></article>
+ </div>
+<div class="view" id="qr">
+ <div class="page-heading"><div><div class="eyebrow">ANALYSIS / QR SECURITY</div><h1>QR Code Scanner</h1><p>Decode a QR code to extract its URL, then send that URL to the scanner.</p></div></div>
+ <article class="panel upload-panel"><div class="upload-icon">▧</div><h3>Decode a QR image</h3><p>Select an image containing a QR code. Decoding runs in your browser.</p><input type="file" id="qrFile" accept="image/*"><button class="primary" onclick="decodeQR()">Decode QR code</button><div id="qrOutput" class="qr-output"></div></article>
+ </div>
+<div class="view" id="history">
+ <div class="page-heading"><div><div class="eyebrow">RECORDS / ACTIVITY LOG</div><h1>Scan History</h1><p>Review the latest 100 scan records saved on this device.</p></div><a class="secondary" href="/export.csv">⇩ Export CSV</a></div>
+ <article class="panel"><div class="panel-head"><div><h3>All recent scans</h3><p>Search and filter your recorded results</p></div><input class="search-input" id="historySearch" placeholder="Search domain..." oninput="filterHistory()"></div><div id="historyTable" class="table-wrap"><div class="empty">Loading scan history…</div></div></article>
+</div>
+<div class="view" id="features">
+ <div class="page-heading"><div><div class="eyebrow">INTELLIGENCE / DETECTION MODULES</div><h1>Threat Analysis</h1><p>What CYBER SHIELD inspects during a URL assessment.</p></div></div>
+ <div class="feature-grid">
+  <article class="panel feature"><i>⌁</i><h3>URL heuristics</h3><p>Length, encoding, suspicious terms, IP-based hosts, subdomains and risky TLD signals.</p><span class="module-state">ACTIVE</span></article>
+  <article class="panel feature"><i>◉</i><h3>DNS & IP intelligence</h3><p>Resolve public host addresses and skip live checks for private or reserved IP destinations.</p><span class="module-state">ACTIVE</span></article>
+  <article class="panel feature"><i>♧</i><h3>TLS certificate</h3><p>Validate the TLS certificate for public HTTPS hosts. HTTPS does not mean a site is trustworthy.</p><span class="module-state">ACTIVE</span></article>
+  <article class="panel feature"><i>◷</i><h3>Domain registration age</h3><p>Look up registration creation date through RDAP when the registry publishes it.</p><span class="module-state">RDAP LOOKUP</span></article>
+  <article class="panel feature"><i>◎</i><h3>VirusTotal</h3><p>Optional URL reputation lookup using your own VirusTotal API key.</p><span class="module-state optional">API KEY REQUIRED</span></article>
+  <article class="panel feature"><i>⌕</i><h3>Google Safe Browsing</h3><p>Optional check for known social-engineering and malware URL matches.</p><span class="module-state optional">API KEY REQUIRED</span></article>
+  <article class="panel feature"><i>▧</i><h3>QR & bulk analysis</h3><p>Decode QR images in-browser and analyze a list of URLs from CSV or TXT files.</p><span class="module-state">AVAILABLE</span></article>
+  <article class="panel feature"><i>⇩</i><h3>Reports & history</h3><p>Save scan history, export CSV and generate individual PDF reports.</p><span class="module-state">AVAILABLE</span></article>
+ </div>
+ <div class="notice"><b>Important:</b> URL heuristics can produce false positives and false negatives. Threat intelligence APIs may have rate limits or incomplete coverage. A “Low risk” result is not proof that a website is safe.</div>
+</div>
+<div class="view" id="reports">
+ <div class="page-heading"><div><div class="eyebrow">OUTPUT / REPORT CENTER</div><h1>Reports & Export</h1><p>Download the scan history or individual PDF reports.</p></div></div>
+ <div class="report-cards"><article class="panel"><div class="report-icon">▤</div><h3>Full scan history</h3><p>Export all stored scans, risk scores, verdicts and indicators as a spreadsheet-friendly CSV file.</p><a class="primary link-button" href="/export.csv">Download CSV →</a></article><article class="panel"><div class="report-icon">▧</div><h3>Individual PDF report</h3><p>Use the PDF button beside a scan in Scan History to download its analysis report.</p><button class="secondary" onclick="showView('history')">Open scan history →</button></article></div>
+</div>
+<footer>CYBER SHIELD <span>·</span> Educational cybersecurity project <span class="footer-right">Use responsibly · Results are indicative only</span></footer>
+</section>
+</main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+</body></html>
