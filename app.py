@@ -1,10 +1,10 @@
 import os, re, json, csv, io, sqlite3, socket, ssl, ipaddress
 from datetime import datetime, timezone
 from urllib.parse import urlparse, unquote
-from flask import Flask, render_template, request, jsonify, send_file, Response
+from flask import flask, render_template, request, jsonify, send_file, Response
 import requests
 
-app = Flask(__name__)
+app = flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "change-this-development-secret")
 DB_PATH = os.path.join(os.path.dirname(__file__), "cyber_shield.db")
 VT_API_KEY = os.environ.get("VT_API_KEY", "")
